@@ -64,7 +64,7 @@ flowchart TD
 - Windows / Linux 均可，Windows 下注意路径不要包含 `|` 等非法字符
 
 ```bash
-git clone https://github.com/<your-name>/vehicle-recognition.git
+git clone https://github.com/xl580/vehicle-recognition.git
 cd vehicle-recognition
 python -m venv .venv
 # Windows: .venv\Scripts\activate
@@ -78,7 +78,7 @@ pip install -r requirements.txt
 
 **方式 A：下载 Release**
 
-到仓库 `Releases` 页面下载并放到 `weights/`：
+到 [Releases](https://github.com/xl580/vehicle-recognition/releases/latest) 页面下载并放到 `weights/`：
 
 ```
 weights/
