@@ -1,0 +1,50 @@
+{
+  "BMW": {
+    "file": "BMW.jpg",
+    "title": "File:2016 BMW 3 Series sedan in Mineral Grey Metallic, front view parked on residential street.jpg"
+  },
+  "Audi": {
+    "file": "Audi.jpg",
+    "title": "File:DSC06185 Audi A6, Bundespolizei Österreich, Front, 2023-10.jpg"
+  },
+  "Toyota": {
+    "file": "Toyota.jpg",
+    "title": "File:2018 GAC-Toyota Camry (front).jpg"
+  },
+  "Honda": {
+    "file": "Honda.jpg",
+    "title": "File:2002 Honda Accord Special Edition sedan, front right, 05-24-2026.jpg"
+  },
+  "Volkswagen": {
+    "file": "Volkswagen.jpg",
+    "title": "File:2006 Volkswagen Golf (1K MY07) R32 4MOTION 5-door hatchback (2006-08-06).jpg"
+  },
+  "Ford": {
+    "file": "Ford.jpg",
+    "title": "File:2018 Ford Focus sedan (front).jpg"
+  },
+  "Hyundai": {
+    "file": "Hyundai.jpg",
+    "title": "File:2016 Hyundai Elantra Sport in Scarlet Red Pearl, Front Right, 05-21-2022.jpg"
+  },
+  "Nissan": {
+    "file": "Nissan.jpg",
+    "title": "File:2023 Dongfeng-Nissan Altima (front).jpg"
+  },
+  "Chevrolet": {
+    "file": "Chevrolet.jpg",
+    "title": "File:2001 Chevrolet Malibu, front right, 09-12-2026.jpg"
+  },
+  "Kia": {
+    "file": "Kia.jpg",
+    "title": "File:2009 Kia Optima LX, front left, 10-15-2023.jpg"
+  },
+  "Mazda": {
+    "file": "Mazda.jpg",
+    "title": "File:1985 Mazda GLC sedan, front 6.12.21.jpg"
+  },
+  "Mercedes-Benz": {
+    "file": "Mercedes-Benz.jpg",
+    "title": "File:Mercedes-Benz E-Class V213 001.jpg"
+  }
+}

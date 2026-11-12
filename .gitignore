@@ -1,0 +1,42 @@
+# 数据与权重（体积大，不入库）
+data/
+weights/
+models/
+runs/
+*.pt
+*.pth
+*.onnx
+*.npz
+
+# 识别记录（SQLite + 标注图）
+records/
+
+# 测试素材：按 scripts/ 下的脚本可重新生成
+test_images/brand_photos/
+test_images/test_video.mp4
+*.mp4
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# 日志与临时文件
+*.log
+tmp/
+outputs/
+.workbuddy/
+*.zip
+
+# 本地启动脚本（含个人路径）
+启动.txt

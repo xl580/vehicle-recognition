@@ -1,0 +1,11 @@
+.venv/
+data/
+models/
+weights/
+runs/
+records/
+test_images/brand_photos/
+__pycache__/
+*.log
+.workbuddy/
+.git/

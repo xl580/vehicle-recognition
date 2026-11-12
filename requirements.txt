@@ -1,0 +1,24 @@
+# 核心依赖
+numpy>=1.24
+opencv-python>=4.9
+Pillow>=10.0
+
+# 检测
+ultralytics>=8.2.0
+
+# 车牌识别（中文车牌专用，需先装 onnxruntime）
+hyperlpr3>=0.1.3
+onnxruntime>=1.17
+
+# 分类训练
+torch>=2.1
+torchvision>=0.16
+
+# 服务
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+
+# 品牌识别（CLIP 特征 / 线性探针 / 检索评测）
+transformers>=4.40
+scikit-learn>=1.3

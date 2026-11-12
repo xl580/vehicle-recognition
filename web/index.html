@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>车辆识别演示 · 车牌 / 品牌 / 车型 / 视频 / 记录</title>
+<style>
+  :root {
+    --bg: #f6f6f4;
+    --card: #ffffff;
+    --line: rgba(0,0,0,0.12);
+    --text: #1f1f1e;
+    --muted: #6b6b68;
+    --accent: #185fa5;
+    --accent-soft: #e6f1fb;
+    --ok: #0f6e56;
+    --danger: #a32d2d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 32px 20px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--text);
+  }
+  .wrap { max-width: 1020px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 6px; }
+  .sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .tab {
+    appearance: none; border: none; background: none; cursor: pointer;
+    padding: 10px 18px; font-size: 14px; color: var(--muted);
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 12px; padding: 16px;
+  }
+  .card h2 { font-size: 14px; font-weight: 600; margin: 0 0 12px; color: var(--muted); }
+  .drop {
+    border: 1.5px dashed rgba(0,0,0,0.2); border-radius: 10px;
+    min-height: 280px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; color: var(--muted); font-size: 13px;
+    background: #fafaf9; transition: border-color .15s, background .15s;
+    overflow: hidden; position: relative; padding: 12px; text-align: center;
+  }
+  .drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .drop img, .drop video { max-width: 100%; max-height: 400px; display: none; border-radius: 6px; }
+  .btn {
+    appearance: none; border: 1px solid var(--line); background: #fff;
+    border-radius: 8px; padding: 9px 18px; font-size: 13px; cursor: pointer;
+    color: var(--text);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.danger { color: var(--danger); border-color: rgba(163,45,45,.4); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .row { display: flex; gap: 10px; margin-top: 14px; align-items: center; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 9px 4px; border-bottom: 1px solid rgba(0,0,0,0.06); vertical-align: top; }
+  td.k { color: var(--muted); width: 96px; }
+  .plate {
+    font-family: ui-monospace, Menlo, monospace; font-size: 22px;
+    letter-spacing: 1px; color: var(--accent); font-weight: 600;
+  }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent); font-size: 12px;
+  }
+  .empty { color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center; }
+  .err { color: var(--danger); font-size: 13px; }
+  .thumb { max-width: 100%; max-height: 260px; border-radius: 8px; border: 1px solid var(--line); margin-top: 10px; }
+  .rtable { font-size: 12.5px; }
+  .rtable th { text-align: left; color: var(--muted); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .rtable td { padding: 8px; vertical-align: middle; }
+  .rtable img { height: 48px; width: 64px; object-fit: cover; border-radius: 4px; border: 1px solid var(--line); vertical-align: middle; display: block; }
+  .rscroll { overflow-x: auto; }
+  .plate-sm { font-family: ui-monospace, Menlo, monospace; font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: .5px; }
+  .sub-line { color: var(--muted); font-size: 11.5px; margin-top: 2px; white-space: nowrap; }
+  .fname { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 12px; }
+  .del-btn { appearance: none; border: 1px solid rgba(163,45,45,.35); background: #fff; color: var(--danger);
+             border-radius: 6px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .del-btn:hover { background: #fcebeb; }
+  .spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--accent);
+          border-top-color: transparent; border-radius: 50%; animation: s 1s linear infinite; vertical-align: -2px; }
+  @keyframes s { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>车辆识别演示</h1>
+  <div class="sub">图片 / 视频：识别车牌号码、车牌类型、品牌、车型与车身颜色；识别结果自动入库</div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="image">图片识别</button>
+    <button class="tab" data-tab="video">视频识别</button>
+    <button class="tab" data-tab="records">识别记录</button>
+  </div>
+
+  <!-- ============ 图片 ============ -->
+  <div class="panel active" id="panel-image">
+    <div class="grid">
+      <div class="card">
+        <h2>图片</h2>
+        <div class="drop" id="drop">
+          <img id="preview" alt="预览">
+          <span id="hint">点击选择图片，或拖拽到此处</span>
+        </div>
+        <input type="file" id="file" accept="image/*" hidden>
+        <div class="row">
+          <button class="btn primary" id="run" disabled>开始识别</button>
+          <button class="btn" id="reset">重置</button>
+        </div>
+        <div class="err" id="err"></div>
+      </div>
+      <div class="card">
+        <h2>结果</h2>
+        <div id="result"><div class="empty">尚未开始识别</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 视频 ============ -->
+  <div class="panel" id="panel-video">
+    <div class="grid">
+      <div class="card">
+        <h2>视频（mp4 / avi / mov，≤200MB）</h2>
+        <div class="drop" id="vdrop">
+          <video id="vpreview" controls muted></video>
+          <span id="vhint">点击选择视频，或拖拽到此处</span>
+        </div>
+        <input type="file" id="vfile" accept="video/*" hidden>
+        <div class="row">
+          <label style="font-size:13px;color:var(--muted)">抽帧
+            <select id="fps" style="padding:5px;border:1px solid var(--line);border-radius:6px">
+              <option value="1">1 帧/秒</option>
+              <option value="2" selected>2 帧/秒</option>
+              <option value="4">4 帧/秒</option>
+              <option value="8">8 帧/秒</option>
+            </select>
+          </label>
+          <button class="btn primary" id="vrun" disabled>开始识别</button>
+          <button class="btn" id="vreset">重置</button>
+        </div>
+        <div class="err" id="verr"></div>
+      </div>
+      <div class="card">
+        <h2>视频汇总</h2>
+        <div id="vresult"><div class="empty">尚未开始识别</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 记录 ============ -->
+  <div class="panel" id="panel-records">
+    <div class="card">
+      <h2>识别记录（SQLite）</h2>
+      <div class="row" style="margin:0 0 12px">
+        <select id="rfilter" style="padding:6px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px">
+          <option value="">全部来源</option>
+          <option value="image">仅图片</option>
+          <option value="video">仅视频</option>
+        </select>
+        <button class="btn" id="rrefresh">刷新</button>
+        <span class="sub-line" id="rcount" style="margin:0 0 0 4px"></span>
+        <span style="flex:1"></span>
+        <button class="btn danger" id="rclear">清空全部</button>
+      </div>
+      <div id="rlist"><div class="empty">加载中...</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = location.origin.startsWith('file') ? 'http://127.0.0.1:8000' : location.origin;
+
+/* ---------- 标签页 ---------- */
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + t.dataset.tab));
+  if (t.dataset.tab === 'records') loadRecords();
+}));
+
+const pct = v => (v * 100).toFixed(1) + '%';
+
+/* ---------- 图片识别 ---------- */
+const drop = document.getElementById('drop'), fileInput = document.getElementById('file'),
+      preview = document.getElementById('preview'), hint = document.getElementById('hint'),
+      runBtn = document.getElementById('run'), resetBtn = document.getElementById('reset'),
+      resultBox = document.getElementById('result'), errBox = document.getElementById('err');
+let file = null;
+
+drop.addEventListener('click', () => fileInput.click());
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('over'); e.dataTransfer.files[0] && setFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', () => fileInput.files[0] && setFile(fileInput.files[0]));
+
+function setFile(f) {
+  file = f;
+  preview.src = URL.createObjectURL(f);
+  preview.style.display = 'block';
+  hint.style.display = 'none';
+  runBtn.disabled = false;
+  errBox.textContent = '';
+}
+resetBtn.addEventListener('click', () => {
+  file = null; preview.style.display = 'none'; preview.src = '';
+  hint.style.display = 'block'; runBtn.disabled = true; fileInput.value = '';
+  resultBox.innerHTML = '<div class="empty">尚未开始识别</div>'; errBox.textContent = '';
+});
+runBtn.addEventListener('click', async () => {
+  if (!file) return;
+  runBtn.disabled = true; runBtn.innerHTML = '<span class="spin"></span> 识别中...';
+  errBox.textContent = '';
+  const fd = new FormData(); fd.append('file', file);
+  try {
+    const res = await fetch(API + '/api/recognize', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+    renderImage(data);
+  } catch (e) {
+    errBox.textContent = '识别失败：' + e.message;
+    resultBox.innerHTML = '<div class="empty">无结果</div>';
+  } finally { runBtn.disabled = false; runBtn.textContent = '开始识别'; }
+});
+
+function renderImage(d) {
+  const p = d.plate || {}, v = d.vehicle || {}, t = d.time_cost_ms || {};
+  const plateText = p.text ? `<span class="plate">${p.text}</span>` : '<span class="empty" style="padding:0">未检出</span>';
+  const rows = [
+    ['车牌号码', plateText],
+    ['车牌类型', p.plate_type ? `<span class="badge">${p.plate_type}</span>` : '—'],
+    ['车牌置信度', p.confidence ? pct(p.confidence) : '—'],
+    ['品牌', v.brand || '—'],
+    ['车型', v.model || '—'],
+    ['车身颜色', v.color || '—'],
+    ['车型置信度', v.confidence ? pct(v.confidence) : '—'],
+    ['耗时', `检测 ${t.detection ?? '-'}ms / OCR ${t.ocr ?? '-'}ms / 分类 ${t.classify ?? '-'}ms`],
+    ['记录编号', d.record_id != null ? `#${d.record_id}` : '—'],
+  ];
+  let html = '<table>' + rows.map(([k, val]) => `<tr><td class="k">${k}</td><td>${val}</td></tr>`).join('') + '</table>';
+  if (d.annotated) html += `<img class="thumb" src="${API + d.annotated}" alt="标注图">`;
+  resultBox.innerHTML = html;
+}
+
+/* ---------- 视频识别 ---------- */
+const vdrop = document.getElementById('vdrop'), vfile = document.getElementById('vfile'),
+      vpreview = document.getElementById('vpreview'), vhint = document.getElementById('vhint'),
+      vrun = document.getElementById('vrun'), vreset = document.getElementById('vreset'),
+      vresult = document.getElementById('vresult'), verr = document.getElementById('verr');
+let vfileObj = null;
+
+vdrop.addEventListener('click', () => vfile.click());
+vdrop.addEventListener('dragover', e => { e.preventDefault(); vdrop.classList.add('over'); });
+vdrop.addEventListener('dragleave', () => vdrop.classList.remove('over'));
+vdrop.addEventListener('drop', e => { e.preventDefault(); vdrop.classList.remove('over'); e.dataTransfer.files[0] && setVideo(e.dataTransfer.files[0]); });
+vfile.addEventListener('change', () => vfile.files[0] && setVideo(vfile.files[0]));
+
+function setVideo(f) {
+  vfileObj = f;
+  vpreview.src = URL.createObjectURL(f);
+  vpreview.style.display = 'block';
+  vhint.style.display = 'none';
+  vrun.disabled = false;
+  verr.textContent = '';
+}
+vreset.addEventListener('click', () => {
+  vfileObj = null; vpreview.style.display = 'none'; vpreview.pause(); vpreview.src = '';
+  vhint.style.display = 'block'; vrun.disabled = true; vfile.value = '';
+  vresult.innerHTML = '<div class="empty">尚未开始识别</div>'; verr.textContent = '';
+});
+vrun.addEventListener('click', async () => {
+  if (!vfileObj) return;
+  vrun.disabled = true; vrun.innerHTML = '<span class="spin"></span> 识别中（抽帧逐帧推理，请稍候）...';
+  verr.textContent = '';
+  const fd = new FormData(); fd.append('file', vfileObj);
+  try {
+    const res = await fetch(API + '/api/recognize/video?sample_fps=' + document.getElementById('fps').value, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+    renderVideo(data);
+  } catch (e) {
+    verr.textContent = '视频识别失败：' + e.message;
+    vresult.innerHTML = '<div class="empty">无结果</div>';
+  } finally { vrun.disabled = false; vrun.textContent = '开始识别'; }
+});
+
+function renderVideo(d) {
+  const vd = d.video || {};
+  let html = `<table>
+    <tr><td class="k">时长 / 抽帧</td><td>${vd.duration_s ?? '-'}s · 总 ${vd.frames_total} 帧，识别 ${vd.frames_sampled} 帧（${vd.sample_fps} 帧/秒），有效车辆帧 ${vd.frames_with_vehicle}</td></tr>
+    <tr><td class="k">总耗时</td><td>${(d.time_cost_ms?.total / 1000).toFixed(1) ?? '-'}s</td></tr>
+  </table>`;
+  if ((d.plates || []).length) {
+    html += '<h2 style="margin-top:14px">检出车牌（同号去重，取最高置信度帧）</h2>';
+    html += d.plates.map(pl => `
+      <div style="display:flex;gap:12px;align-items:center;margin:8px 0">
+        <div style="flex:0 0 180px">
+          <span class="plate" style="font-size:18px">${pl.text}</span>
+          <div style="font-size:12px;color:var(--muted)">${pl.plate_type || ''} · ${pct(pl.confidence)} · 第 ${pl.frame} 帧(${pl.time_s}s)</div>
+        </div>
+        ${pl.annotated ? `<img class="thumb" style="max-height:90px;margin:0;flex:0 0 auto" src="${API + '/records/annotated/' + encodeURIComponent(pl.annotated)}">` : ''}
+      </div>`).join('');
+  } else {
+    html += '<div class="empty" style="padding:16px">未检出车牌</div>';
+  }
+  if ((d.vehicles || []).length) {
+    html += '<h2 style="margin-top:14px">车辆信息（命中帧投票）</h2><table>' +
+      d.vehicles.map(v => `<tr><td class="k">${{brand:'品牌',model:'车型',color:'颜色'}[v.kind]}</td><td>${v.value} <span style="color:var(--muted);font-size:12px">${v.votes}/${v.frames} 帧</span></td></tr>`).join('') + '</table>';
+  }
+  vresult.innerHTML = html;
+}
+
+/* ---------- 识别记录 ---------- */
+const rlist = document.getElementById('rlist'), rfilter = document.getElementById('rfilter');
+document.getElementById('rrefresh').addEventListener('click', loadRecords);
+rfilter.addEventListener('change', loadRecords);
+document.getElementById('rclear').addEventListener('click', async () => {
+  if (!confirm('确定清空全部识别记录？（标注图保留在磁盘）')) return;
+  await fetch(API + '/api/records', { method: 'DELETE' });
+  loadRecords();
+});
+
+async function loadRecords() {
+  rlist.innerHTML = '<div class="empty">加载中...</div>';
+  const st = rfilter.value;
+  try {
+    const res = await fetch(API + '/api/records?limit=200' + (st ? '&source_type=' + st : ''));
+    const data = await res.json();
+    const rs = data.records || [];
+    document.getElementById('rcount').textContent = rs.length ? `共 ${rs.length} 条` : '';
+    if (!rs.length) { rlist.innerHTML = '<div class="empty">暂无记录 —— 去识别几张图片或一段视频吧</div>'; return; }
+    const shortTime = ts => (ts || '').replace('T', ' ').slice(0, 16);
+    rlist.innerHTML = `<div class="rscroll"><table class="rtable">
+      <tr><th>缩略图</th><th>时间 / 来源</th><th>车牌</th><th>品牌 / 车型</th><th>颜色</th><th>文件</th><th></th></tr>` +
+      rs.map(r => `<tr>
+        <td>${r.annotated ? `<a href="${API + '/records/annotated/' + encodeURIComponent(r.annotated)}" target="_blank"><img src="${API + '/records/annotated/' + encodeURIComponent(r.annotated)}" alt=""></a>` : '<div style="width:64px;height:48px;background:#f1efe8;border-radius:4px"></div>'}</td>
+        <td style="white-space:nowrap">${shortTime(r.ts)}<div style="margin-top:3px"><span class="badge">${r.source_type === 'video' ? '视频' : '图片'}</span></div></td>
+        <td>${r.plate_text
+          ? `<span class="plate-sm">${r.plate_text}</span><div class="sub-line">${r.plate_type || ''} · 置信 ${r.plate_conf ? pct(r.plate_conf) : '—'}</div>`
+          : '<span style="color:var(--muted)">—</span>'}</td>
+        <td>${r.brand || r.model
+          ? `<div style="font-weight:600">${r.brand || '—'}</div><div class="sub-line">${r.model || ''}</div>`
+          : '<span style="color:var(--muted)">—</span>'}</td>
+        <td style="white-space:nowrap">${r.color || '—'}</td>
+        <td><div class="fname" title="${r.filename}">${r.filename}</div></td>
+        <td><button class="del-btn" onclick="delRecord(${r.id})">删除</button></td>
+      </tr>`).join('') + '</table></div>';
+  } catch (e) {
+    rlist.innerHTML = `<div class="err">加载失败：${e.message}（请确认后端已启动）</div>`;
+  }
+}
+
+window.delRecord = async id => {
+  await fetch(API + '/api/records/' + id, { method: 'DELETE' });
+  loadRecords();
+};
+</script>
+</body>
+</html>
